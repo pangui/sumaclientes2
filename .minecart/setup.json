@@ -1,0 +1,40 @@
+{
+  "components": {
+    "devcontainer": {
+      "color": "#ff7828",
+      "extensions": [
+      ]
+    },
+    "kamal": {
+      "environments": [
+        "staging"
+      ],
+      "letsencrypt_email": "cristobal@sumaclientes.com",
+      "registry": "southamerica-west1-docker.pkg.dev",
+      "repository": "second-casing-434200-v9/binocular-registry",
+      "staging": {
+        "domain": "staging.sumaclientes.com"
+      }
+    },
+    "postgres": {
+      "version": "16"
+    },
+    "rails_app" : {
+      "version": "7.1.4"
+    },
+    "ruby": {
+      "version": "3.3.5"
+    },
+    "whenever": true
+  },
+  "minecart": {
+    "host": "http://dockerhost:3005"
+  },
+  "project": {
+    "name": {
+      "camel": "SumaClientes",
+      "code": "sumaclientes",
+      "title": "SumaClientes"
+    }
+  }
+}

@@ -1,0 +1,52 @@
+services:
+  app:
+    build:
+      args:
+        - GIT_CONFIG_NAME=${GIT_CONFIG_NAME}
+        - GIT_CONFIG_EMAIL=${GIT_CONFIG_EMAIL}
+      context: ./app
+      dockerfile: Dockerfile
+    command: sleep infinity
+    container_name: sumaclientes-app
+    env_file: services_env/app.env
+    hostname: sumaclientes-app
+    ports:
+      - "${PORTFWD_PUMA:-3000}:3000"
+    security_opt:
+      - seccomp:unconfined
+    volumes:
+      - ..:/home/app/sumaclientes:cached
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ~/.ssh/sumaclientes:/home/app/.ssh/shared:cached
+  cache:
+    container_name: sumaclientes-cache
+    env_file: services_env/cache.env
+    hostname: sumaclientes-cache
+    image: redis:alpine
+    ports:
+      - "${PORTFWD_REDIS:-6379}:6379"
+  db:
+    container_name: sumaclientes-db
+    env_file: services_env/db.env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-sumaclientes}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sumaclientes}
+      POSTGRES_USER: ${POSTGRES_USER:-sumaclientes}
+    hostname: sumaclientes-db
+    image: postgres:16
+    ports:
+      - "${PORTFWD_POSTGRES:-5432}:5432"
+    volumes:
+      - sumaclientes_db:/var/lib/postgresql/data
+  mailer:
+    container_name: sumaclientes-mailer
+    env_file: services_env/mailer.env
+    hostname: sumaclientes-mailer
+    image: sj26/mailcatcher
+    ports:
+      - "${PORTFWD_MAILCATCHER_SMTP:-1025}:1025"
+      - "${PORTFWD_MAILCATCHER_WEB:-1080}:1080"
+version: '3'
+volumes:
+  sumaclientes_db:
+    driver: local

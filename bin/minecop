@@ -1,0 +1,421 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+require 'active_support/all'
+require 'active_support/core_ext/numeric/time'
+require 'awesome_print'
+require 'faraday'
+require 'faraday/multipart'
+require 'json'
+require 'net/http'
+require 'pty'
+require 'tmpdir'
+
+class MineCop
+
+  DEV_GEMFILE = '.devcontainer/app/Gemfile'
+  VALID_OPTIONS = %w[none feedback].freeze
+
+  def initialize(action = nil)
+    unless action.nil? || VALID_OPTIONS.include?(action)
+      puts "Optional parameter #{action} unrecognized. Valid parameters: #{VALID_OPTIONS[1..]}"
+      exit 1
+    end
+    if action == 'feedback'
+      submit_feedback
+      exit 0
+    end
+    # upload project for audit
+    copy_project_to_tmp_dir
+    response = upload_to_minecart(type: :project_zip, file: compress_tmp_dir)
+    exit 0 unless response&.status == 302
+    download_audited_project(response.headers['location'])
+    unzip_audited_project_into_tmp_dir
+    copy_tmp_dir_to_project
+  end
+
+  def submit_feedback
+    tmp_diff = 'tmp/unstaged.diff'
+    console.run("git diff -u > #{tmp_diff}")
+    if console.run("head -n 1 #{tmp_diff}") == ''
+      console.log_command('Nothing to inform today. Thank you anyway!')
+      return
+    end
+    response = upload_to_minecart(type: :feedback_diff, file: tmp_diff)
+    if response&.status == 200
+      console.run('git checkout -- .')
+      console.log_command('Your unstaged files were received. Thank you for your feedback!')
+      return
+    end
+    console.log_command('Your feedback could not be received. Sorry for that!')
+    console.rm(tmp_diff)
+  end
+
+  def project_paths(directory, type: :file)
+    excluded_paths = %w[
+      ^\\.$
+      ^\\.git
+      ^config/credentials
+      ^config/master\\.key$
+      ^config/routes\\.rb$
+      ^log
+      ^node_modules
+      ^storage
+      ^tmp
+      ^vendor
+    ].join('\\|')
+    console.cd(directory)
+    cmd = %(find -type #{type == :file ? 'f' : 'd'})
+    cmd += %( | sed -E 's/^\\.\\///g')
+    cmd += %( | grep -v "#{excluded_paths}" | sort)
+    console.quiet.run(cmd).split
+  end
+
+  def copy_project_to_tmp_dir
+    console.log_command("Copying project folders to #{tmp_dir}…")
+    project_paths(Dir.pwd, type: :dir).each do |directory|
+      console.quiet.mkdir("#{tmp_dir}/#{directory}")
+    end
+    console.log_command("Copying project files to #{tmp_dir}…")
+    file_list = project_paths(Dir.pwd, type: :file) - git_untracked_files
+    file_list.each do |file|
+      console.quiet.cp(file, "#{tmp_dir}/#{file}")
+    end
+  end
+
+  def compress_tmp_dir
+    console.cd(tmp_dir)
+    compressed_file = "#{File.basename(tmp_dir)}.zip"
+    console.log_command('Compressing project in zip file…')
+    console.run("zip -r #{compressed_file} * .* -x '../*'")
+    console.run("mv #{compressed_file} ../")
+    console.cd('..')
+    console.rm(compressed_file[..-5])
+    console.run("readlink -f #{compressed_file}")
+  end
+
+  def minecart_host
+    return @host unless @host.nil?
+
+    host = setup['minecart']['host']
+    dockerhost_regexp = %r{^http(s?)://dockerhost}
+    if host =~ dockerhost_regexp
+      ip = console.run("echo $(ip route show | awk '/default/ {print $3}')")
+      host.gsub!(dockerhost_regexp, "http\\1://#{ip}")
+    end
+    @host = URI(host)
+  end
+
+  def upload_to_minecart(type: nil, file: nil)
+    # generalize for any kind of files, send to minecop controller
+    conn = Faraday.new(minecart_host) do |f|
+      f.request :multipart
+      f.request :url_encoded
+      f.adapter :net_http
+    end
+    content_type = console.run("file --mime-type -b #{file}")
+    payload = { type:, file: Faraday::UploadIO.new(file, content_type) }
+    console.log_command('Uploading files to MineCart…')
+    response = conn.post("/minecop/#{setup['project']['name']['code']}/upload", payload)
+    if response.status == 500
+      console.log_command('MineCart returned Internal Server Error')
+      exit 1
+    end
+    response
+  rescue Faraday::ConnectionFailed
+    console.log_command('Oh no, connection failed!')
+  rescue Faraday::TimeoutError
+    console.log_command('Oh no, connection timeout!')
+  end
+
+  def download_audited_project(project_url)
+    zip_url = "#{project_url}.zip"
+    console.log_command("Downloading project from #{zip_url}")
+    console.rm(tmp_dir)
+    console.mkdir(tmp_dir)
+    console.run("curl -o #{tmp_dir}.zip #{zip_url}")
+  end
+
+  def unzip_audited_project_into_tmp_dir
+    console.run("unzip #{tmp_dir}.zip -d #{tmp_dir}")
+  end
+
+  def copy_tmp_dir_to_project
+    console.log_command('Copying tmp dir folders to project…')
+    project_paths(tmp_dir, type: :dir).each do |directory|
+      console.quiet.mkdir("#{Dir.pwd}/#{directory}")
+    end
+    console.log_command('Copying received files to project…')
+    project_paths(tmp_dir, type: :file).each do |file|
+      if file.in? files_overwriting_blocked
+        # rename file and mark as suggested suggestion
+        prev_suggestions = ["#{Dir.pwd}/#{file}"]
+        next_suggestion = ''
+        i = 0
+        loop do
+          extension_number = i.zero? ? '' : ".#{i.to_s.rjust(2, '0')}"
+          suggested_file = "#{Dir.pwd}/#{file}.suggested#{extension_number}"
+          if File.file? suggested_file
+            prev_suggestions << suggested_file
+          else
+            next_suggestion = suggested_file
+            break
+          end
+          i += 1
+        end
+        # don't copy if new file is equal to last suggestion
+        source_md5 = console.run("md5sum #{file}").split.first
+        destination_md5 = console.run("md5sum #{prev_suggestions.last}").split.first
+        next if source_md5 == destination_md5
+
+        console.cp(file, next_suggestion)
+      else
+        console.quiet.cp(file, "#{Dir.pwd}/#{file}")
+      end
+    end
+  end
+
+  def files_overwriting_blocked
+    git_untracked_files + git_unstaged_modified_files
+  end
+
+  def git_untracked_files
+    @git_untracked_files ||= console.run(%(cd #{Dir.pwd} && git ls-files -o | grep -v "^\\(tmp\\|node_mod\\)")).split
+  end
+
+  def git_unstaged_modified_files
+    @git_unstaged_modified_files ||= console.run(%(cd #{Dir.pwd} && git ls-files -m)).split
+  end
+
+  def setup
+    @setup ||= JSON.parse(File.read('.minecart/setup.json'))
+  end
+
+  def tmp_dir
+    @tmp_dir ||= Dir.mktmpdir
+  end
+
+  def console
+    @console ||= Terminal.new
+  end
+
+  class Terminal
+
+    FORMATS = {
+      reset: 0,
+      bold: 1,
+      faint: 2,
+      italic: 3,
+      underline: 4,
+      black: 30,
+      black_bg: 40,
+      red: 31,
+      red_bg: 41,
+      green: 32,
+      green_bg: 42,
+      yellow: 33,
+      yellow_bg: 43,
+      blue: 34,
+      blue_bg: 44,
+      magenta: 35,
+      magenta_bg: 45,
+      cyan: 36,
+      cyan_bg: 46,
+      light_gray: 37,
+      light_gray_bg: 47,
+      gray: 90,
+      gray_bg: 100,
+      light_red: 91,
+      light_red_bg: 101,
+      light_green: 92,
+      light_green_bg: 102,
+      light_yellow: 93,
+      light_yellow_bg: 103,
+      light_blue: 94,
+      light_blue_bg: 104,
+      light_magenta: 95,
+      light_magenta_bg: 105,
+      light_cyan: 96,
+      light_cyan_bg: 106,
+      white: 97,
+      white_bg: 107
+    }.freeze
+
+    class << self
+
+      def enclosed(path)
+        # Improve checking spaces, single and double quotes
+        path = path.strip
+        path =  path[1..-2] if path =~ /^'.*'$/
+        path =  path[1..-2] if path =~ /^".*"$/
+        path = path.gsub(/[^\\]'/, "\\\\'").strip
+        path.gsub(' ', '\\ ')
+      end
+
+      def absolute_dir_exists?(dir)
+        return false if dir.blank?
+        return false unless dir =~ %r{^/}
+
+        dir = dir.gsub(%r{^(.+)/$}, '\1')
+        `[ -d '#{dir}' ] && echo y || echo n`.strip == 'y'
+      end
+
+      def absolute_file_exists?(file)
+        return false if file.blank?
+        return false unless file =~ %r{^/}
+
+        `[ -f '#{file}' ] && echo y || echo n`.strip == 'y'
+      end
+
+    end
+
+    def initialize(working_dir = nil, logger_enabled: true)
+      if working_dir.nil?
+        @working_dir = Dir.pwd
+      else
+        raise "Path not found #{working_dir}" unless Terminal.absolute_dir_exists?(working_dir)
+
+        @working_dir = working_dir
+      end
+      @logger_enabled = logger_enabled
+      @quiet = false
+      @user = `whoami`.strip
+      @host = `cat /etc/hostname`.strip
+    end
+
+    def run_in_pty(command, decorate: true)
+      PTY.spawn(command) do |reader, _writer, _pid|
+        loop do
+          begin
+            line = reader.gets.chomp
+          rescue Errno::EIO
+            reader.close
+            break
+          end
+          `:`
+          if block_given?
+            yield line
+          elsif decorate
+            log_command(line)
+          else
+            puts line
+          end
+        end
+      end
+    end
+
+    def quiet
+      @quiet = true
+      self
+    end
+
+    def pwd
+      @working_dir
+    end
+
+    def now
+      time = Time
+      return time.now unless Time.respond_to? :zone
+
+      time.zone = 'Etc/UTC'
+      time.zone.now
+    end
+
+    def run(command)
+      if @logger_enabled && !@quiet
+        prompt = format("#{@user}@#{@host}:#{@working_dir}$", :white).to_s
+        prompt = prompt.gsub(":/home/#{@user}", ':~')
+        if command =~ /^\s*#/
+          # comment command
+          log_command("#{prompt} #{command}")
+        else
+          # real command
+          start = now
+          c = `cd #{Terminal.enclosed(@working_dir)} && #{command}`
+          log_command("#{prompt} #{command}", start, now)
+          # # real command
+          # Rails.logger.debug{ "REAL_CMD: cd '#{@working_dir}' && #{command}\n\n" } if DEBUG
+        end
+        return c&.chomp
+      end
+      return if command =~ /^\s*#/
+
+      `cd #{Terminal.enclosed(@working_dir)} && #{command}`.chomp
+    ensure
+      @quiet = false
+    end
+
+    def log_command(command, start = 0, finish = 0)
+      delta = "(#{(finish - start).round(1)})".ljust(5)
+      kind = format("shell #{delta.to_f} ", :red, :bold)
+      detail = format(command, :green)
+      # Rails.logger.info "#{kind} #{detail}"
+      Logger.info "#{kind} #{detail}"
+    end
+
+    def format(text, *options)
+      "\e[#{options.map{|o| FORMATS[o] }.compact.join(';')}m#{text}\e[0m"
+    end
+
+    def cd(target_path = nil)
+      target_path ||= Dir.pwd
+      target_path = absolute_path(target_path)
+      return @working_dir if @working_dir == target_path
+
+      if Terminal.absolute_dir_exists?(target_path)
+        run("cd #{Terminal.enclosed(target_path)}")
+        @working_dir = target_path
+        return @working_dir
+      end
+      raise "Path not found! (cd #{Terminal.enclosed(target_path)})"
+    end
+
+    def cp(original, copy)
+      flag = dir_exists?(original) ? ' -fr' : ''
+      flag = ' -fr' if original =~ /\*/
+      run("cp#{flag} #{Terminal.enclosed(original)} #{Terminal.enclosed(copy)}")
+    end
+
+    def mkdir(dir)
+      return if path_exists?(dir)
+
+      run("mkdir -p #{Terminal.enclosed(dir)}")
+    end
+
+    def rm(path)
+      return unless path_exists?(path)
+
+      recursive = dir_exists?(path) ? 'r' : ''
+      run("rm -f#{recursive} #{Terminal.enclosed(path)}")
+    end
+
+    def absolute_path(path)
+      return File.expand_path(path) if path =~ %r{^/}
+
+      File.expand_path("#{@working_dir}/#{path}")
+    end
+
+    def path_exists?(path)
+      dir_exists?(path) or file_exists?(path)
+    end
+
+    def dir_exists?(dir)
+      Terminal.absolute_dir_exists?(absolute_path(dir))
+    end
+
+    def file_exists?(file)
+      Terminal.absolute_file_exists?(absolute_path(file))
+    end
+
+  end
+
+  module Logger
+
+    def self.info(msg)
+      puts msg
+    end
+
+  end
+
+end
+
+MineCop.new ARGV[0]

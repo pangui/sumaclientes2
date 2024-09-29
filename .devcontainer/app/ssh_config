@@ -1,0 +1,4 @@
+Host staging.sumaclientes.com
+  User root
+  IdentityFile ~/.ssh/shared/id_rsa
+  IdentitiesOnly yes

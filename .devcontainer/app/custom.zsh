@@ -1,0 +1,5 @@
+ZSH_THEME="agnoster"
+alias migrate="rails db:migrate"
+alias rollback="rails db:rollback"
+alias rc="rails c"
+alias tailf="tail -f -n 200"

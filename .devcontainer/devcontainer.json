@@ -1,0 +1,83 @@
+{
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "aliariff.vscode-erb-beautify",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "FallenMax.mithril-emmet",
+        "GitHub.vscode-pull-request-github",
+        "jdinhlife.gruvbox",
+        "kaiwood.endwise",
+        "miguel-savignano.ruby-symbols",
+        "mtxr.sqltools-driver-pg",
+        "mtxr.sqltools",
+        "Shopify.ruby-lsp",
+        "ZneuRay.erb-vscode-snippets"
+      ],
+      "settings": {
+        "chat.editor.fontSize": 12,
+        "debug.console.fontSize": 12,
+        "diffEditor.ignoreTrimWhitespace": false,
+        "diffEditor.renderSideBySide": false,
+        "editor.autoClosingQuotes": "always",
+        "editor.fontFamily": "'DejaVu Sans Mono for Powerline'",
+        "editor.fontSize": 12,
+        "editor.guides.indentation": false,
+        "editor.insertSpaces": true,
+        "editor.renderWhitespace": "all",
+        "editor.tabSize": 2,
+        "emmet.triggerExpansionOnTab": true,
+        "files.associations": {
+          "*.html.erb": "erb",
+          "*.json": "jsonc"
+        },
+        "files.insertFinalNewline": true,
+        "files.simpleDialog.enable": true,
+        "files.trimFinalNewlines": true,
+        "files.trimTrailingWhitespace": true,
+        "git.autofetch": true,
+        "git.confirmSync": false,
+        "git.openRepositoryInParentFolders": "always",
+        "git.rebaseWhenSync": true,
+        "github.gitProtocol": "ssh",
+        "markdown.preview.fontSize": 12,
+        "markdown.preview.lineHeight": 1.5,
+        "remote.autoForwardPorts": false,
+        "rubyLsp.formatter": "rubocop",
+        "rubyLsp.rubyExecutablePath": "/usr/local/bin/ruby",
+        "scm.inputFontSize": 12,
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "terminal.integrated.fontFamily": "'DejaVu Sans Mono for Powerline'",
+        "terminal.integrated.fontSize": 12,
+        "terminal.integrated.lineHeight": 1.2,
+        "window.zoomLevel": 1,
+        "workbench.colorCustomizations": {
+          "sideBarSectionHeader.background": "#ff7828",
+          "sideBarSectionHeader.foreground": "#1d2021"
+        },
+        "workbench.colorTheme": "Gruvbox Dark Hard",
+        "workbench.tree.renderIndentGuides": "none",
+        "[javascript]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[ruby]": {
+          "editor.defaultFormatter": "Shopify.ruby-lsp",
+          "editor.formatOnSave": true,
+          "editor.formatOnType": true,
+          "editor.insertSpaces": true,
+          "editor.semanticHighlighting.enabled": true,
+          "editor.tabSize": 2
+        }
+      }
+    }
+  },
+  "dockerComposeFile": "docker-compose.yml",
+  "initializeCommand": ".devcontainer/services_env/setup",
+  "name": "SumaClientesDevContainer",
+  "postStartCommand" : "bin/dev",
+  "remoteUser": "app",
+  "runServices": ["app", "cache", "db", "mailer"],
+  "service": "app",
+  "workspaceFolder": "/home/app/sumaclientes"
+}
