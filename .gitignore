@@ -1,0 +1,11 @@
+/**/*.env
+/*devnotes
+/app/assets/builds/*
+!/app/assets/builds/.keep
+/config/**/*.key
+/log/*
+!/log/.keep
+/node_modules
+/public/assets/*
+/tmp/*
+!/tmp/.keep

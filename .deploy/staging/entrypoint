@@ -1,0 +1,10 @@
+#!/bin/bash -e
+
+# crontab
+service cron start
+service rsyslog start
+whenever --user $USER --update-crontab --set environment=$RAILS_ENV && \
+# start app
+su - $USER
+bin/rails db:prepare
+bin/rails server -b 0.0.0.0

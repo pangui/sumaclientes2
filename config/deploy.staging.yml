@@ -1,0 +1,12 @@
+builder:
+  dockerfile: .deploy/staging/Dockerfile
+image: second-casing-434200-v9/binocular-registry/sumaclientes-staging-img
+labels:
+  traefik.http.routers.sumaclientes-web.rule: Host(`staging.sumaclientes.com`)
+  traefik.http.routers.sumaclientes-web-https.rule: Host(`staging.sumaclientes.com`)
+servers:
+  web:
+    - staging.sumaclientes.com
+traefik:
+  args:
+    entrypoints.ep-https.http.tls.domains[0].main: staging.sumaclientes.com

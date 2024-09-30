@@ -1,0 +1,76 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+require 'thor'
+require 'dotenv'
+require 'pty'
+
+class Kamal < Thor
+
+  desc 'env', 'Wrapper for kamal env (deploy environment variables)'
+  method_option :destination,
+    aliases: '-d',
+    required: false,
+    desc: 'Specify destination for environment file (.env.[DESTINATION])'
+
+  def env
+    Dotenv.overload(".env.#{destination}")
+    run_in_pty("bundle exec kamal env push -d #{destination}")
+  end
+
+  desc 'deploy', 'Wrapper for kamal deploy'
+  method_option :destination,
+    aliases: '-d',
+    required: false,
+    desc: 'Specify destination for environment file (.env.[DESTINATION])'
+
+  def deploy
+    run_in_pty("bundle exec kamal deploy -d #{destination}")
+  end
+
+  desc 'setup', 'Wrapper for kamal setup'
+  method_option :destination,
+    aliases: '-d',
+    required: false,
+    desc: 'Specify destination for environment file (.env.[DESTINATION])'
+
+  def setup
+    run_in_pty("bundle exec kamal setup -d #{destination}")
+  end
+
+  private
+
+  def destination
+    d = options[:destination]
+    d ||= {
+      'main' => 'production',
+      'staging' => 'staging'
+    }[`git branch --show-current`.strip]
+    raise StandardError if d.nil?
+
+    d
+  rescue StandardError
+    say('Destination could not be determined', :red)
+    exit(1)
+  end
+
+  def run_in_pty(command)
+    PTY.spawn(command) do |reader, _writer, _pid|
+      loop do
+        begin
+          line = reader.gets
+        rescue Errno::EIO
+          reader.close
+          break
+        end
+        `:`
+        if block_given?
+          yield line
+        else
+          puts line
+        end
+      end
+    end
+  end
+
+end
+Kamal.start

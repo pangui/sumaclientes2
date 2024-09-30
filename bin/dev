@@ -1,0 +1,142 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+require 'pty'
+
+module Runner
+
+  def self.formats
+    {
+      white: "\e[97m",
+      blue: "\e[34m",
+      red_bold: "\e[31;1m",
+      reset: "\e[0m"
+    }
+  end
+
+  def self.check_bundler
+    missing = false
+    run_in_pty 'bundle check' do |l|
+      missing ||= l =~ /missing/
+      console_log l if missing && l !~ /bundle install/
+    end
+    if missing
+      console_log 'Installing missing gems required by Gemfile…'
+      run_in_pty 'bundle install' do |l|
+        console_log l unless l =~ /Using /
+      end
+    else
+      console_log 'All required gems are already installed…'
+    end
+  end
+
+  def self.check_bun
+    return if `which bun`.empty?
+
+    `bun install`
+  end
+
+  def self.check_puma_pids
+    return unless system('[ -f tmp/pids/*.pid ]')
+
+    console_log 'Removing previous puma pid file…'
+    `rm -f tmp/pids/*.pid`
+  end
+
+  def self.check_development_log
+    log_file = 'log/development.log'
+    unless system("[ -f #{log_file} ]")
+      console_log 'Initialize development log…'
+      `touch #{log_file}`
+    end
+    return unless `cat #{log_file} | wc -l`.strip.to_i > 1000
+
+    console_log 'Reducing development log size…'
+    `echo -n "$(tail -n 1000 #{log_file})" > #{log_file}`
+  end
+
+  def self.trap_signals
+    `kill -l`.chomp.split.each do |signal|
+      Signal.trap(signal){ say_goodbye signal }
+    rescue StandardError
+      next
+    end
+  end
+
+  def self.say_goodbye(signal)
+    unhandled_signals = %w[CHLD WINCH]
+    return if unhandled_signals.include?(signal) || @signal_trapped
+
+    `kill -9 #{@foreman_pid}` unless @foreman_pid.nil?
+    @signal_trapped = true
+    console_log ''
+    console_log " #{formats[:white]}See you later #{formats[:red_bold]}#{`whoami`.strip}#{formats[:white]}! (#{signal})"
+    console_log ''
+    exit(0)
+  end
+
+  def self.run_puma
+    if `which foreman`.empty?
+      console_log 'Installing foreman…'
+      run_in_pty('gem install foreman')
+    end
+    console_log 'Running puma rails server & bun assets builder using foreman…'
+    `mkdir -p tmp/pids`
+    run_in_pty("foreman start -f .devcontainer/app/foreman.cfg -d #{Dir.pwd}") do |message|
+      prefix = 'foreman'
+      message = message.force_encoding('UTF-8').chomp
+      message.match(/^(?<time>[0-9:]{8}) (?<process>[a-z]+)\.1(?<tab>\s+)\|\s(?<message>.*)$/).tap do |parts|
+        unless parts.nil?
+          prefix = "#{parts[:time]}#{parts[:tab]}#{parts[:process]}"
+          message = parts[:message]
+        end
+      end
+      log = "#{formats[:blue]}#{prefix}"
+      begin
+        log += " ➤ #{formats[:reset]}#{message}#{formats[:reset]}"
+      rescue Encoding::CompatibilityError
+        log = message
+      end
+      puts log
+    end
+  end
+
+  def self.console_log(message)
+    log = "#{formats[:blue]}#{__FILE__}"
+    log += " ➤ #{formats[:reset]}#{message.chomp}#{formats[:reset]}"
+    puts log
+  end
+
+  def self.run_in_pty(command, decorate: true)
+    PTY.spawn(command) do |reader, _writer, pid|
+      @foreman_pid = pid if command =~ /^foreman/
+      loop do
+        begin
+          line = reader.gets
+        rescue Errno::EIO
+          reader.close
+          break
+        end
+        `:`
+        if block_given?
+          yield line
+        elsif decorate
+          console_log(line)
+        else
+          puts line
+        end
+      end
+    end
+  end
+
+  def self.execute
+    trap_signals
+    check_puma_pids
+    check_development_log
+    check_bundler
+    check_bun
+    run_puma
+  end
+
+end
+
+Runner.execute

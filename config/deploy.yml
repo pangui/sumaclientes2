@@ -1,0 +1,39 @@
+builder:
+  context: "."
+  multiarch: false
+env:
+  clear:
+    PORT: 3000
+  secret:
+    - DATABASE_URL
+    - RAILS_MASTER_KEY
+labels:
+  traefik.enable: true
+  # http route
+  traefik.http.routers.sumaclientes-web.service: sumaclientes-web
+  # https route
+  traefik.http.routers.sumaclientes-web-https.service: sumaclientes-web
+  traefik.http.routers.sumaclientes-web-https.entryPoints: ep-https
+registry:
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+  server: southamerica-west1-docker.pkg.dev
+  username: _json_key_base64
+service: sumaclientes
+traefik:
+  args:
+    certificatesresolvers.letsencrypt.acme.email: "cristobal@sumaclientes.com"
+    certificatesresolvers.letsencrypt.acme.httpchallenge: true
+    certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint: http
+    certificatesresolvers.letsencrypt.acme.storage: "/letsencrypt/acme.json"
+    entrypoints.ep-https.address: ":443"
+    entrypoints.ep-https.http.tls: true
+    entrypoints.ep-https.http.tls.certresolver: letsencrypt
+    entrypoints.http.address: ":80"
+    entrypoints.http.http.redirections.entrypoint.scheme: https
+    entrypoints.http.http.redirections.entrypoint.to: ep-https
+  options:
+    publish:
+      - 443:443
+    volume:
+      - /letsencrypt/acme.json:/letsencrypt/acme.json

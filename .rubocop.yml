@@ -1,0 +1,72 @@
+require:
+  - rubocop-rails
+AllCops:
+  Exclude:
+    - "db/**/*schema.rb"
+    - "node_modules/**/*"
+  NewCops: enable
+Layout/ArgumentAlignment:
+  EnforcedStyle: with_fixed_indentation
+Layout/CaseIndentation:
+  EnforcedStyle: end
+Layout/EmptyLineAfterMagicComment:
+  Enabled: false
+Layout/EmptyLineBetweenDefs:
+  Enabled: true
+  AllowAdjacentOneLineDefs: false
+Layout/EmptyLinesAroundAttributeAccessor:
+  Enabled: false
+Layout/EmptyLinesAroundClassBody:
+  EnforcedStyle: empty_lines
+Layout/EmptyLinesAroundModuleBody:
+  EnforcedStyle: empty_lines
+Layout/FirstArrayElementIndentation:
+  EnforcedStyle: consistent
+Layout/MultilineMethodCallIndentation:
+  EnforcedStyle: indented
+Layout/SpaceBeforeBlockBraces:
+  EnforcedStyle: no_space
+  EnforcedStyleForEmptyBraces: no_space
+Layout/SpaceInsideBlockBraces:
+  SpaceBeforeBlockParameters: false
+Layout/TrailingWhitespace:
+  Enabled: true
+Metrics/AbcSize:
+  Enabled: false
+Metrics/BlockLength:
+  Exclude:
+    - "app/admin/*.rb"
+    - "app/models/concerns/**/*.rb"
+    - "config/environments/development.rb"
+    - "config/environments/staging.rb"
+Metrics/CyclomaticComplexity:
+  Enabled: false
+Metrics/ClassLength:
+  Enabled: false
+Metrics/MethodLength:
+  Max: 50
+  CountAsOne: ["array", "heredoc", "method_call"]
+Metrics/ModuleLength:
+  Enabled: false
+Metrics/PerceivedComplexity:
+  Enabled: false
+Naming/PredicateName:
+  Enabled: false
+Rails/Output:
+  Enabled: false
+Rails/OutputSafety:
+  Enabled: false
+Rails/SquishedSQLHeredocs:
+  Enabled: false
+Rails/UnknownEnv:
+  Environments:
+    - staging
+Style/ClassAndModuleChildren:
+  Exclude:
+    - "app/models/**/*.rb"
+Style/Documentation:
+  Enabled: false
+Style/FrozenStringLiteralComment:
+  SafeAutoCorrect: true
+Style/Lambda:
+  EnforcedStyle: literal
