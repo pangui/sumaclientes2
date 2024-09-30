@@ -21,11 +21,13 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_30_120118) do
     t.integer "level"
     t.string "name"
     t.string "code"
+    t.integer "sort_index"
     t.decimal "lft"
     t.decimal "rgt"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["area_id"], name: "index_areas_on_area_id"
+    t.index ["code", "area_id"], name: "index_areas_on_code_and_area_id", unique: true
   end
 
   create_table "tmp_adjuntos_web", id: :integer, default: -> { "nextval('adjuntos_web_id_seq'::regclass)" }, force: :cascade do |t|
