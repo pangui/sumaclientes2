@@ -1,5 +1,7 @@
+/*.sql
 /**/*.env
 /*devnotes
+/*devnotes.md
 /app/assets/builds/*
 !/app/assets/builds/.keep
 /config/**/*.key

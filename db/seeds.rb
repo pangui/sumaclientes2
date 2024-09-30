@@ -1,10 +1,43 @@
 # frozen_string_literal: true
-# This file should ensure the existence of records required to run the application in every environment (production,
-# development, test). The code here should be idempotent so that it can be executed at any point in every environment.
-# The data can then be loaded with the bin/rails db:seed command (or created alongside the database with db:setup).
-#
-# Example:
-#
-#   ["Action", "Comedy", "Drama", "Horror"].each do |genre_name|
-#     MovieGenre.find_or_create_by!(name: genre_name)
-#   end
+exit(0) unless Rails.env.development?
+
+chile = Area.create(
+  name: 'Chile',
+  country_code: 'cl',
+  level: 1,
+  code: 'cl'
+)
+[
+  {
+    level: 1,
+    name: 'Región Metropolitana',
+    code: '1113',
+    provinces: [
+      {
+        level: 2,
+        name: 'Santiago',
+        code: '1123',
+        communes: [
+          {
+            level: 3,
+            name: 'Las Condes',
+            code: '23412'
+          }
+        ]
+      }
+    ]
+  }
+].each do |region_data|
+  provinces = region_data.delete(:provinces)
+  region_data[:area_id] = chile.id
+  region = Area.create(region_data)
+  provinces.each do |province_data|
+    communes = province_data.delete(:communes)
+    province_data[:area_id] = region.id
+    province = Area.create(province_data)
+    communes.each do |commune_data|
+      commune_data[:area_id] = province.id
+      Area.create(commune_data)
+    end
+  end
+end

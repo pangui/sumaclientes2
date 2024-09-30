@@ -60,6 +60,7 @@ Rails/SquishedSQLHeredocs:
   Enabled: false
 Rails/UnknownEnv:
   Environments:
+    - development
     - staging
 Style/ClassAndModuleChildren:
   Exclude:
