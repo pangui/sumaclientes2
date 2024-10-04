@@ -24,10 +24,28 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_30_120118) do
     t.integer "sort_index"
     t.decimal "lft"
     t.decimal "rgt"
+    t.string "old_table"
+    t.integer "old_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["area_id"], name: "index_areas_on_area_id"
     t.index ["code", "area_id"], name: "index_areas_on_code_and_area_id", unique: true
+  end
+
+  create_table "merchants", force: :cascade do |t|
+    t.string "name"
+    t.string "analytics_account"
+    t.string "adwords_account"
+    t.string "timezone"
+    t.boolean "cname_verification", default: false, null: false
+    t.string "billing_name"
+    t.string "billing_address"
+    t.string "billing_phone"
+    t.string "currency_code"
+    t.string "old_table"
+    t.integer "old_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "tmp_adjuntos_web", id: :integer, default: -> { "nextval('adjuntos_web_id_seq'::regclass)" }, force: :cascade do |t|
@@ -193,18 +211,6 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_30_120118) do
     t.integer "orden"
     t.index ["formulario_id"], name: "index_estados_prospecto_on_formulario_id"
     t.index ["producto_id"], name: "index_estados_prospecto_on_producto_id"
-  end
-
-  create_table "tmp_facturas", id: :integer, default: -> { "nextval('facturas_id_seq'::regclass)" }, force: :cascade do |t|
-    t.integer "comercio_id"
-    t.string "correlativo", limit: 255
-    t.decimal "monto"
-    t.string "estado", limit: 255
-    t.datetime "fecha_de_envio", precision: nil
-    t.datetime "fecha_de_pago", precision: nil
-    t.datetime "created_at", precision: nil
-    t.datetime "updated_at", precision: nil
-    t.index ["comercio_id"], name: "index_facturas_on_comercio_id"
   end
 
   create_table "tmp_formularios_web", id: :integer, default: -> { "nextval('formularios_web_id_seq'::regclass)" }, force: :cascade do |t|

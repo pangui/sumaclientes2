@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-class CreateAreas < ActiveRecord::Migration[7.1]
+class CreateModels < ActiveRecord::Migration[7.1]
 
   def up
     enable_extension 'unaccent'
@@ -8,7 +8,8 @@ class CreateAreas < ActiveRecord::Migration[7.1]
         execute("alter table #{t} rename to tmp_#{t}")
       end
     end
-    create_table :areas do |t|
+    drop_table :tmp_facturas, if_exists: true
+    recreated_table :areas do |t|
       t.references :area, foreign_key: true
       t.string :country_code
       t.integer :level
@@ -17,9 +18,28 @@ class CreateAreas < ActiveRecord::Migration[7.1]
       t.integer :sort_index
       t.decimal :lft
       t.decimal :rgt
-      t.timestamps
     end
     add_index :areas, %i[code area_id], unique: true
+    recreated_table :merchants do |t|
+      t.string :name
+      t.string :analytics_account
+      t.string :adwords_account
+      t.string :timezone
+      t.boolean :cname_verification, default: false, null: false
+      t.string :billing_name
+      t.string :billing_address
+      t.string :billing_phone
+      t.string :currency_code
+    end
+  end
+
+  def recreated_table(name)
+    create_table name do |t|
+      yield (t)
+      t.string :old_table
+      t.integer :old_id
+      t.timestamps
+    end
   end
 
   def down
