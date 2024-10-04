@@ -15,6 +15,34 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_30_120118) do
   enable_extension "plpgsql"
   enable_extension "unaccent"
 
+  create_table "active_storage_attachments", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "record_type", null: false
+    t.bigint "record_id", null: false
+    t.bigint "blob_id", null: false
+    t.datetime "created_at", null: false
+    t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
+    t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
+  end
+
+  create_table "active_storage_blobs", force: :cascade do |t|
+    t.string "key", null: false
+    t.string "filename", null: false
+    t.string "content_type"
+    t.text "metadata"
+    t.string "service_name", null: false
+    t.bigint "byte_size", null: false
+    t.string "checksum"
+    t.datetime "created_at", null: false
+    t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
+  end
+
+  create_table "active_storage_variant_records", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.string "variation_digest", null: false
+    t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
   create_table "areas", force: :cascade do |t|
     t.bigint "area_id"
     t.string "country_code"
@@ -24,12 +52,25 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_30_120118) do
     t.integer "sort_index"
     t.decimal "lft"
     t.decimal "rgt"
-    t.string "old_table"
-    t.integer "old_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "old_table"
+    t.integer "old_id"
     t.index ["area_id"], name: "index_areas_on_area_id"
     t.index ["code", "area_id"], name: "index_areas_on_code_and_area_id", unique: true
+  end
+
+  create_table "folders", force: :cascade do |t|
+    t.bigint "website_id"
+    t.bigint "folder_id"
+    t.string "name"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "old_table"
+    t.integer "old_id"
+    t.index ["folder_id"], name: "index_folders_on_folder_id"
+    t.index ["name", "folder_id"], name: "index_folders_on_name_and_folder_id", unique: true
+    t.index ["website_id"], name: "index_folders_on_website_id"
   end
 
   create_table "merchants", force: :cascade do |t|
@@ -42,10 +83,10 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_30_120118) do
     t.string "billing_address"
     t.string "billing_phone"
     t.string "currency_code"
-    t.string "old_table"
-    t.integer "old_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "old_table"
+    t.integer "old_id"
   end
 
   create_table "tmp_adjuntos_web", id: :integer, default: -> { "nextval('adjuntos_web_id_seq'::regclass)" }, force: :cascade do |t|
@@ -455,5 +496,22 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_30_120118) do
     t.string "canal", limit: 255
   end
 
+  create_table "websites", force: :cascade do |t|
+    t.bigint "merchant_id"
+    t.string "domain"
+    t.string "google_tag_manager"
+    t.string "analytics_view"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "old_table"
+    t.integer "old_id"
+    t.index ["merchant_id"], name: "index_websites_on_merchant_id"
+  end
+
+  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "areas", "areas"
+  add_foreign_key "folders", "folders"
+  add_foreign_key "folders", "websites"
+  add_foreign_key "websites", "merchants"
 end
