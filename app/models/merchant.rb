@@ -3,6 +3,7 @@ class Merchant < ApplicationRecord
 
   # associations
   has_many :websites, dependent: :restrict_with_exception
+  has_many :users, dependent: :restrict_with_exception
   # callbacks
   after_create :create_website
   # nested attributes

@@ -214,3 +214,60 @@ ApplicationRecord.connection.execute(<<~SQL)
   where
     f.id = folders.id
 SQL
+# users
+ApplicationRecord.connection.execute(<<~SQL)
+  insert into users (
+    merchant_id,
+    admin,
+    first_name,
+    last_name,
+    phone,
+    active,
+    email,
+    encrypted_password,
+    reset_password_token,
+    reset_password_sent_at,
+    remember_created_at,
+    sign_in_count,
+    current_sign_in_at,
+    last_sign_in_at,
+    last_sign_in_ip,
+    confirmation_token,
+    confirmed_at,
+    confirmation_sent_at,
+    unconfirmed_email,
+    old_table,
+    old_id,
+    created_at,
+    updated_at
+  )
+  select
+    m.id,
+    u.admin,
+    u.nombre,
+    u.apellidos,
+    u.telefono,
+    not(u.deleted),
+    u.email,
+    u.encrypted_password,
+    u.reset_password_token,
+    u.reset_password_sent_at,
+    u.remember_created_at,
+    u.sign_in_count,
+    u.current_sign_in_at,
+    u.last_sign_in_at,
+    u.last_sign_in_ip,
+    u.confirmation_token,
+    u.confirmed_at,
+    u.confirmation_sent_at,
+    u.unconfirmed_email,
+    'usuarios',
+    u.id,
+    u.created_at,
+    u.updated_at
+  from
+    tmp_usuarios u
+    left join merchants m on m.old_id = u.comercio_id
+  order by
+    u.id
+SQL
