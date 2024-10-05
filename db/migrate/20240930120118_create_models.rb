@@ -83,11 +83,11 @@ class CreateModels < ActiveRecord::Migration[7.1]
     add_index :folders, %i[name folder_id], unique: true
     recreate_table :users do |t|
       t.references :merchant, foreign_key: true
-      t.boolean :admin
+      t.boolean :admin, default: false, null: false
       t.string :first_name
       t.string :last_name
       t.string :phone
-      t.boolean :active
+      t.boolean :active, default: true, null: false
       t.string :email, index: { unique: true }
       t.string :encrypted_password
       t.string :reset_password_token
@@ -101,6 +101,11 @@ class CreateModels < ActiveRecord::Migration[7.1]
       t.datetime :confirmed_at
       t.datetime :confirmation_sent_at
       t.string :unconfirmed_email
+    end
+    remove_index :tmp_permisions, name: :index_permissions_on_user_id
+    recreate_table :permissions do |t|
+      t.references :user, foreign_key: true
+      t.string :key
     end
   end
 

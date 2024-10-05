@@ -271,3 +271,26 @@ ApplicationRecord.connection.execute(<<~SQL)
   order by
     u.id
 SQL
+# permissions
+ApplicationRecord.connection.execute(<<~SQL)
+  insert into permissions (
+    user_id,
+    key,
+    created_at,
+    updated_at,
+    old_table,
+    old_id
+  )
+  select
+    u.id,
+    p.key,
+    p.created_at,
+    p.updated_at,
+    'permissions',
+    p.id
+  from
+    tmp_permissions p
+    left join users u on u.old_id = p.user_id
+  order by
+    p.id
+SQL

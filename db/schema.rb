@@ -89,6 +89,16 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_30_120118) do
     t.integer "old_id"
   end
 
+  create_table "permissions", force: :cascade do |t|
+    t.bigint "user_id"
+    t.string "key"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "old_table"
+    t.integer "old_id"
+    t.index ["user_id"], name: "index_permissions_on_user_id"
+  end
+
   create_table "tmp_adjuntos_web", id: :integer, default: -> { "nextval('adjuntos_web_id_seq'::regclass)" }, force: :cascade do |t|
     t.integer "carpeta_id"
     t.datetime "created_at", precision: nil
@@ -335,7 +345,6 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_30_120118) do
     t.string "key", limit: 255
     t.datetime "created_at", precision: nil
     t.datetime "updated_at", precision: nil
-    t.index ["user_id"], name: "index_permissions_on_user_id"
   end
 
   create_table "tmp_product_attributes", id: :integer, default: -> { "nextval('product_attributes_id_seq'::regclass)" }, force: :cascade do |t|
@@ -541,6 +550,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_30_120118) do
   add_foreign_key "areas", "areas"
   add_foreign_key "folders", "folders"
   add_foreign_key "folders", "websites"
+  add_foreign_key "permissions", "users"
   add_foreign_key "users", "merchants"
   add_foreign_key "websites", "merchants"
 end
