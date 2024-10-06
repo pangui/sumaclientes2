@@ -214,6 +214,11 @@ ApplicationRecord.connection.execute(<<~SQL)
   where
     f.id = folders.id
 SQL
+5.times do
+  break if Folder.where(website_id: nil).count.zero?
+
+  Folder.where(website_id: nil).find_each(&:save)
+end
 # users
 ApplicationRecord.connection.execute(<<~SQL)
   insert into users (
