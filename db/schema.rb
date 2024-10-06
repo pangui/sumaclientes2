@@ -73,6 +73,20 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_30_120118) do
     t.index ["website_id"], name: "index_folders_on_website_id"
   end
 
+  create_table "lead_status_groups", force: :cascade do |t|
+    t.bigint "offering_id"
+    t.boolean "contacted"
+    t.boolean "successfull"
+    t.string "name"
+    t.string "color"
+    t.integer "sort_index"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "old_table"
+    t.integer "old_id"
+    t.index ["offering_id"], name: "index_lead_status_groups_on_offering_id"
+  end
+
   create_table "merchants", force: :cascade do |t|
     t.string "name"
     t.string "analytics_account"
@@ -87,6 +101,28 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_30_120118) do
     t.datetime "updated_at", null: false
     t.string "old_table"
     t.integer "old_id"
+  end
+
+  create_table "offerings", force: :cascade do |t|
+    t.bigint "merchant_id"
+    t.bigint "website_id"
+    t.string "name"
+    t.string "keyword"
+    t.decimal "budget"
+    t.decimal "lead_value"
+    t.string "notify_to"
+    t.string "analytics_view"
+    t.integer "leads_per_page"
+    t.string "customer_type"
+    t.boolean "active"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "old_table"
+    t.integer "old_id"
+    t.bigint "initial_status_id"
+    t.index ["initial_status_id"], name: "index_offerings_on_initial_status_id"
+    t.index ["merchant_id"], name: "index_offerings_on_merchant_id"
+    t.index ["website_id"], name: "index_offerings_on_website_id"
   end
 
   create_table "permissions", force: :cascade do |t|
@@ -507,11 +543,11 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_30_120118) do
 
   create_table "users", force: :cascade do |t|
     t.bigint "merchant_id"
-    t.boolean "admin"
+    t.boolean "admin", default: false, null: false
     t.string "first_name"
     t.string "last_name"
     t.string "phone"
-    t.boolean "active"
+    t.boolean "active", default: true, null: false
     t.string "email"
     t.string "encrypted_password"
     t.string "reset_password_token"
@@ -550,6 +586,10 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_30_120118) do
   add_foreign_key "areas", "areas"
   add_foreign_key "folders", "folders"
   add_foreign_key "folders", "websites"
+  add_foreign_key "lead_status_groups", "offerings"
+  add_foreign_key "offerings", "lead_status_groups", column: "initial_status_id"
+  add_foreign_key "offerings", "merchants"
+  add_foreign_key "offerings", "websites"
   add_foreign_key "permissions", "users"
   add_foreign_key "users", "merchants"
   add_foreign_key "websites", "merchants"

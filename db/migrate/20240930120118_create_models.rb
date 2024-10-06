@@ -102,11 +102,33 @@ class CreateModels < ActiveRecord::Migration[7.1]
       t.datetime :confirmation_sent_at
       t.string :unconfirmed_email
     end
-    remove_index :tmp_permisions, name: :index_permissions_on_user_id
+    remove_index :tmp_permisions, name: :index_permissions_on_user_id, if_exists: true
     recreate_table :permissions do |t|
       t.references :user, foreign_key: true
       t.string :key
     end
+    recreate_table :offerings do |t|
+      t.references :merchant, foreign_key: true
+      t.references :website, foreign_key: true
+      t.string :name
+      t.string :keyword
+      t.decimal :budget
+      t.decimal :lead_value
+      t.string :notify_to
+      t.string :analytics_view
+      t.integer :leads_per_page
+      t.string :customer_type
+      t.boolean :active
+    end
+    recreate_table :lead_status_groups do |t|
+      t.references :offering, foreign_key: true
+      t.boolean :contacted
+      t.boolean :successfull
+      t.string :name
+      t.string :color
+      t.integer :sort_index
+    end
+    add_reference :offerings, :initial_status, foreign_key: { to_table: :lead_status_groups }
   end
 
   def recreate_table(name)

@@ -243,7 +243,7 @@ ApplicationRecord.connection.execute(<<~SQL)
   )
   select
     m.id,
-    u.admin,
+    coalesce(u.admin, false),
     u.nombre,
     u.apellidos,
     u.telefono,
@@ -293,4 +293,104 @@ ApplicationRecord.connection.execute(<<~SQL)
     left join users u on u.old_id = p.user_id
   order by
     p.id
+SQL
+# offerings
+ApplicationRecord.connection.execute(<<~SQL)
+  insert into offerings (
+    merchant_id,
+    website_id,
+    name,
+    keyword,
+    budget,
+    lead_value,
+    notify_to,
+    analytics_view,
+    leads_per_page,
+    customer_type,
+    active,
+    created_at,
+    updated_at,
+    old_table,
+    old_id
+  )
+  select
+    m.id,
+    w.id,
+    o.titulo,
+    o.nombre_clave,
+    o.presupuesto,
+    o.valor_cliente,
+    o.notificar_a,
+    o.vista_analytics,
+    o.prospectos_por_pagina,
+    o.tipo_cliente,
+    o.status = 'active',
+    o.created_at,
+    o.updated_at,
+    'productos',
+    o.id
+  from
+    tmp_productos o
+    left join merchants m on m.old_id = o.comercio_id
+    left join websites w on w.old_id = o.sitio_id
+  order by
+    o.id
+SQL
+# offering statuses
+ApplicationRecord.connection.execute(<<~SQL)
+  insert into lead_status_groups (
+    offering_id,
+    contacted,
+    name,
+    color,
+    sort_index,
+    created_at,
+    updated_at,
+    old_table,
+    old_id
+  )
+  select
+    o.id,
+    ep.contactado,
+    ep.nombre,
+    lower(ep.color),
+    ep.orden,
+    ep.created_at,
+    ep.updated_at,
+    'productos',
+    ep.id
+  from
+    tmp_estados_prospecto ep
+    left join offerings o on o.old_id = ep.producto_id
+  order by
+    ep.id
+SQL
+# initial offering statuses
+ApplicationRecord.connection.execute(<<~SQL)
+  update
+    offerings o
+  set
+    initial_status_id = i.offering_status_id
+  from (
+    select
+      o2.id as offering_id,
+      os.id as offering_status_id
+    from
+      tmp_productos p
+      join tmp_estados_prospecto ep on ep.id = p.estado_inicial_id
+      join lead_status_groups os on os.old_id = ep.id
+      join offerings o2 on o2.old_id = p.id
+    ) i
+  where
+    i.offering_id = o.id
+SQL
+# successfull offering statuses
+ApplicationRecord.connection.execute(<<~SQL)
+  update
+    lead_status_groups
+  set
+    successfull = old_id in (
+      select  estado_exitoso_id
+      from    tmp_productos
+    )
 SQL
