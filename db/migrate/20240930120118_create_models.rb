@@ -129,6 +129,14 @@ class CreateModels < ActiveRecord::Migration[7.1]
       t.integer :sort_index
     end
     add_reference :offerings, :initial_status, foreign_key: { to_table: :lead_status_groups }
+    recreate_table :webpages do |t|
+      t.references :folder, foreign_key: true
+      t.string :name
+      t.string :title
+      t.text :body
+      t.string :google_font
+    end
+    add_index :webpages, %i[folder_id name], unique: true
   end
 
   def recreate_table(name)

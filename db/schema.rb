@@ -569,6 +569,20 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_30_120118) do
     t.index ["merchant_id"], name: "index_users_on_merchant_id"
   end
 
+  create_table "webpages", force: :cascade do |t|
+    t.bigint "folder_id"
+    t.string "name"
+    t.string "title"
+    t.text "body"
+    t.string "google_font"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "old_table"
+    t.integer "old_id"
+    t.index ["folder_id", "name"], name: "index_webpages_on_folder_id_and_name", unique: true
+    t.index ["folder_id"], name: "index_webpages_on_folder_id"
+  end
+
   create_table "websites", force: :cascade do |t|
     t.bigint "merchant_id"
     t.string "domain"
@@ -592,5 +606,6 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_30_120118) do
   add_foreign_key "offerings", "websites"
   add_foreign_key "permissions", "users"
   add_foreign_key "users", "merchants"
+  add_foreign_key "webpages", "folders"
   add_foreign_key "websites", "merchants"
 end

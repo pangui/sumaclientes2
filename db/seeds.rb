@@ -399,3 +399,32 @@ ApplicationRecord.connection.execute(<<~SQL)
       from    tmp_productos
     )
 SQL
+# webpages
+ApplicationRecord.connection.execute(<<~SQL)
+  insert into webpages (
+    folder_id,
+    name,
+    title,
+    body,
+    google_font,
+    created_at,
+    updated_at,
+    old_table,
+    old_id
+  )
+  select
+    f.id,
+    w.nombre,
+    w.titulo,
+    trim(w.body),
+    w.google_font,
+    w.created_at,
+    w.updated_at,
+    'paginas_web',
+    w.id
+  from
+    tmp_paginas_web w
+    left join folders f on f.old_id = w.carpeta_id
+  order by
+    w.id
+SQL
