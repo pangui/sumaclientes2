@@ -428,3 +428,49 @@ ApplicationRecord.connection.execute(<<~SQL)
   order by
     w.id
 SQL
+# assets
+ApplicationRecord.connection.execute(<<~SQL)
+  delete from tmp_hojas_de_estilo where codigo is null
+SQL
+ApplicationRecord.connection.execute(<<~SQL)
+  insert into assets (
+    folder_id,
+    kind,
+    name,
+    content_type,
+    old_path,
+    created_at,
+    updated_at,
+    old_table,
+    old_id
+  )
+  select
+    f.id,
+    'stylesheet',
+    a.nombre,
+    'text/css',
+    '/stylesheets/' || a.id::text || '.css',
+    a.created_at,
+    a.updated_at,
+    'paginas_web',
+    a.id
+  from
+    tmp_hojas_de_estilo a
+    left join folders f on f.old_id = a.carpeta_id
+  union all
+  select
+    f.id,
+    'image',
+    a.archivo_file_name,
+    a.archivo_content_type,
+    '/system/adjuntos_web/archivos/000/000/' || lpad(a.id::text, 3, '0') || '/original/' || a.archivo_file_name,
+    a.created_at,
+    a.updated_at,
+    'adjuntos_web',
+    a.id
+  from
+    tmp_adjuntos_web a
+    left join folders f on f.old_id = a.carpeta_id
+  order by
+    2, 8
+SQL

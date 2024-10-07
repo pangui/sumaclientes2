@@ -10,4 +10,6 @@ class Website < ApplicationRecord
     inverse_of: :website
   has_many :offerings, dependent: :restrict_with_exception
 
+  delegate :all_assets, to: :folder
+
 end

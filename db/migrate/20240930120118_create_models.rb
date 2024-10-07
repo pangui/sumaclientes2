@@ -137,6 +137,14 @@ class CreateModels < ActiveRecord::Migration[7.1]
       t.string :google_font
     end
     add_index :webpages, %i[folder_id name], unique: true
+    recreate_table :assets do |t|
+      t.references :folder, foreign_key: true
+      t.string :kind
+      t.string :name
+      t.string :content_type
+      t.string :old_path
+    end
+    add_index :assets, %i[folder_id name], unique: true
   end
 
   def recreate_table(name)

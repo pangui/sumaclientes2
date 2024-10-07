@@ -60,6 +60,20 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_30_120118) do
     t.index ["code", "area_id"], name: "index_areas_on_code_and_area_id", unique: true
   end
 
+  create_table "assets", force: :cascade do |t|
+    t.bigint "folder_id"
+    t.string "kind"
+    t.string "name"
+    t.string "content_type"
+    t.string "old_path"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "old_table"
+    t.integer "old_id"
+    t.index ["folder_id", "name"], name: "index_assets_on_folder_id_and_name", unique: true
+    t.index ["folder_id"], name: "index_assets_on_folder_id"
+  end
+
   create_table "folders", force: :cascade do |t|
     t.bigint "website_id"
     t.bigint "folder_id"
@@ -598,6 +612,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_30_120118) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "areas", "areas"
+  add_foreign_key "assets", "folders"
   add_foreign_key "folders", "folders"
   add_foreign_key "folders", "websites"
   add_foreign_key "lead_status_groups", "offerings"

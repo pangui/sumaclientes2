@@ -9,5 +9,6 @@
 !/log/.keep
 /node_modules
 /public/assets/*
+/secrets/*
 /tmp/*
 !/tmp/.keep

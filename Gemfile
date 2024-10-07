@@ -5,6 +5,7 @@ ruby '3.3.5'
 
 gem 'bootsnap', require: false
 gem 'cssbundling-rails'
+gem 'google-cloud-storage'
 gem 'jsbundling-rails'
 gem 'pg', '~> 1.1'
 gem 'puma', '>= 5.0'
