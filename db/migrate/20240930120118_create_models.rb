@@ -154,6 +154,17 @@ class CreateModels < ActiveRecord::Migration[7.1]
       t.string :title
     end
     add_index :forms, %i[folder_id name], unique: true
+    recreate_table :dynamic_properties do |t|
+      t.references :merchant
+      t.references :offering
+      t.string :title
+      t.string :input_type
+      t.integer :sort_index
+      t.boolean :active
+      t.string :validation
+      t.jsonb :validation_params, default: {}
+      t.string :placeholder
+    end
   end
 
   def recreate_table(name)

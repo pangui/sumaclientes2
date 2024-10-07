@@ -474,7 +474,7 @@ ApplicationRecord.connection.execute(<<~SQL)
   order by
     2, 8
 SQL
-# webpages
+# forms
 ApplicationRecord.connection.execute(<<~SQL)
   insert into forms (
     folder_id,
@@ -508,4 +508,46 @@ ApplicationRecord.connection.execute(<<~SQL)
     fw.thankyou_id is not null
   order by
     fw.id
+SQL
+# dynamic properties
+ApplicationRecord.connection.execute(<<~SQL)
+  insert into dynamic_properties (
+    merchant_id,
+    offering_id,
+    title,
+    input_type,
+    sort_index,
+    active,
+    validation,
+    placeholder,
+    created_at,
+    updated_at,
+    old_table,
+    old_id
+  )
+  select
+    m.id,
+    o.id,
+    dp.titulo,
+    case dp.tipo
+      when 'texto' then 'text'
+      when 'lista' then 'select'
+      when 'fecha' then 'date'
+      when 'comuna' then 'commune'
+      else dp.tipo
+    end,
+    dp.orden,
+    dp.activo,
+    dp.tipo_validacion,
+    dp.placeholder,
+    dp.created_at,
+    dp.updated_at,
+    'atributos_dinamicos',
+    dp.id
+  from
+    tmp_atributos_dinamicos dp
+    left join merchants m on m.old_id = dp.comercio_id
+    left join offerings o on o.old_id = dp.producto_id
+  order by
+    dp.id
 SQL

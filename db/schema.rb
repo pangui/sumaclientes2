@@ -74,6 +74,24 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_30_120118) do
     t.index ["folder_id"], name: "index_assets_on_folder_id"
   end
 
+  create_table "dynamic_properties", force: :cascade do |t|
+    t.bigint "merchant_id"
+    t.bigint "offering_id"
+    t.string "title"
+    t.string "input_type"
+    t.integer "sort_index"
+    t.boolean "active"
+    t.string "validation"
+    t.jsonb "validation_params", default: {}
+    t.string "placeholder"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "old_table"
+    t.integer "old_id"
+    t.index ["merchant_id"], name: "index_dynamic_properties_on_merchant_id"
+    t.index ["offering_id"], name: "index_dynamic_properties_on_offering_id"
+  end
+
   create_table "folders", force: :cascade do |t|
     t.bigint "website_id"
     t.bigint "folder_id"
