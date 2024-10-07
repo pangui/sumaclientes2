@@ -474,3 +474,38 @@ ApplicationRecord.connection.execute(<<~SQL)
   order by
     2, 8
 SQL
+# webpages
+ApplicationRecord.connection.execute(<<~SQL)
+  insert into forms (
+    folder_id,
+    offering_id,
+    redirect_to_id,
+    name,
+    submit_label,
+    title,
+    created_at,
+    updated_at,
+    old_table,
+    old_id
+  )
+  select
+    f.id,
+    o.id,
+    r.id,
+    fw.nombre,
+    fw.nombre_envio,
+    fw.titulo,
+    fw.created_at,
+    fw.updated_at,
+    'formularios_web',
+    fw.id
+  from
+    tmp_formularios_web fw
+    left join folders f on f.old_id = fw.carpeta_id
+    left join offerings o on o.old_id = fw.producto_id
+    left join webpages r on r.old_id = fw.thankyou_id
+  where
+    fw.thankyou_id is not null
+  order by
+    fw.id
+SQL

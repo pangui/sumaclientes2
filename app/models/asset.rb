@@ -11,11 +11,6 @@ class Asset < ApplicationRecord
     javascript
     image
   ].freeze
-  # method delegation
-  delegate :website, to: :folder
-  # validations
-  validates :name, presence: true
-  validates :name, uniqueness: { scope: :folder_id }
   # scopes
   scope :stylesheets, ->{ where(kind: 'stylesheet') }
   # storage

@@ -9,15 +9,9 @@ class Webpage < ApplicationRecord
   #   foreign_key: 'pagina_id',
   #   association_foreign_key: 'estilo_id',
   #   join_table: 'paginas_estilos'
-  # method delegation
-  delegate :website, to: :folder
   # delegate :available_stylesheets, to: :folder
   # # accessors
   # attr_accessor :rendered_body
-  # validations
-  validates :name, presence: true
-  validates :name, uniqueness: { scope: :folder_id }
-
   # callbacks
   before_create :add_sample_body
   # after_save :reload_routes

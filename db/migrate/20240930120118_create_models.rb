@@ -145,6 +145,15 @@ class CreateModels < ActiveRecord::Migration[7.1]
       t.string :old_path
     end
     add_index :assets, %i[folder_id name], unique: true
+    recreate_table :forms do |t|
+      t.references :folder, foreign_key: true
+      t.references :offering, foreign_key: true
+      t.references :redirect_to, foreign_key: { to_table: :webpages }
+      t.string :name
+      t.string :submit_label
+      t.string :title
+    end
+    add_index :forms, %i[folder_id name], unique: true
   end
 
   def recreate_table(name)

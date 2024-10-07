@@ -6,6 +6,7 @@ class Folder < ApplicationRecord
   belongs_to :website, optional: true
   has_many :folders, dependent: :restrict_with_exception
   has_many :assets, dependent: :restrict_with_exception
+  has_many :forms, dependent: :restrict_with_exception
   # callbacks
   before_save :inherit_website
 

@@ -87,6 +87,23 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_30_120118) do
     t.index ["website_id"], name: "index_folders_on_website_id"
   end
 
+  create_table "forms", force: :cascade do |t|
+    t.bigint "folder_id"
+    t.bigint "offering_id"
+    t.bigint "redirect_to_id"
+    t.string "name"
+    t.string "submit_label"
+    t.string "title"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "old_table"
+    t.integer "old_id"
+    t.index ["folder_id", "name"], name: "index_forms_on_folder_id_and_name", unique: true
+    t.index ["folder_id"], name: "index_forms_on_folder_id"
+    t.index ["offering_id"], name: "index_forms_on_offering_id"
+    t.index ["redirect_to_id"], name: "index_forms_on_redirect_to_id"
+  end
+
   create_table "lead_status_groups", force: :cascade do |t|
     t.bigint "offering_id"
     t.boolean "contacted"
@@ -615,6 +632,9 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_30_120118) do
   add_foreign_key "assets", "folders"
   add_foreign_key "folders", "folders"
   add_foreign_key "folders", "websites"
+  add_foreign_key "forms", "folders"
+  add_foreign_key "forms", "offerings"
+  add_foreign_key "forms", "webpages", column: "redirect_to_id"
   add_foreign_key "lead_status_groups", "offerings"
   add_foreign_key "offerings", "lead_status_groups", column: "initial_status_id"
   add_foreign_key "offerings", "merchants"
