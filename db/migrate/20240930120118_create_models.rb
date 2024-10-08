@@ -155,8 +155,8 @@ class CreateModels < ActiveRecord::Migration[7.1]
     end
     add_index :forms, %i[folder_id name], unique: true
     recreate_table :dynamic_properties do |t|
-      t.references :merchant
-      t.references :offering
+      t.references :merchant, foreign_key: true
+      t.references :offering, foreign_key: true
       t.string :title
       t.string :input_type
       t.integer :sort_index
@@ -164,6 +164,12 @@ class CreateModels < ActiveRecord::Migration[7.1]
       t.string :validation
       t.jsonb :validation_params, default: {}
       t.string :placeholder
+    end
+    recreate_table :form_fields do |t|
+      t.references :form, foreign_key: true
+      t.references :dynamic_property, foreign_key: true
+      t.string :static_property
+      t.integer :sort_index
     end
   end
 

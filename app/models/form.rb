@@ -7,6 +7,8 @@ class Form < ApplicationRecord
   belongs_to :offering
   belongs_to :redirect_to, class_name: 'Webpage'
   has_many :fields, class_name: 'FormField', dependent: :restrict_with_exception
+  # accessors and attributes
+  attr_reader :span
 
   def render(cols = 1)
     @span = (12 / [cols.to_i, 1].max).to_i
@@ -36,6 +38,12 @@ class Form < ApplicationRecord
       </div>
     HTML
     output
+  end
+
+  def dynamic_field_counter
+    @dynamic_field_counter ||= -1
+    @dynamic_field_counter += 1
+    @dynamic_field_counter
   end
 
   def field_counter

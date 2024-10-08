@@ -12,6 +12,7 @@ chile = Area.create(
 # regions
 ApplicationRecord.connection.execute(<<~SQL)
   insert into areas (
+    country_code,
     name,
     area_id,
     code,
@@ -23,6 +24,7 @@ ApplicationRecord.connection.execute(<<~SQL)
     updated_at
   )
   select
+    'cl',
     nombre,
     #{chile.id},
     codigo_ine,
@@ -40,6 +42,7 @@ SQL
 # provinces
 ApplicationRecord.connection.execute(<<~SQL)
   insert into areas (
+    country_code,
     name,
     area_id,
     code,
@@ -51,6 +54,7 @@ ApplicationRecord.connection.execute(<<~SQL)
     updated_at
   )
   select
+    'cl',
     p.nombre,
     a.id,
     p.codigo_ine,
@@ -62,13 +66,14 @@ ApplicationRecord.connection.execute(<<~SQL)
     p.updated_at
   from
     tmp_provincias p
-    join areas a on a.old_id = p.region_id
+    join areas a on a.old_id = p.region_id and a.level = 2
   order by
     p.codigo_ine::int
 SQL
 # communes
 ApplicationRecord.connection.execute(<<~SQL)
   insert into areas (
+    country_code,
     name,
     area_id,
     code,
@@ -80,6 +85,7 @@ ApplicationRecord.connection.execute(<<~SQL)
     updated_at
   )
   select
+    'cl',
     c.nombre,
     a.id,
     c.codigo_ine,
@@ -91,7 +97,7 @@ ApplicationRecord.connection.execute(<<~SQL)
     c.updated_at
   from
     tmp_comunas c
-    join areas a on a.old_id = c.provincia_id
+    join areas a on a.old_id = c.provincia_id and a.level = 3
   order by
     c.codigo_ine::int
 SQL
@@ -550,4 +556,32 @@ ApplicationRecord.connection.execute(<<~SQL)
     left join offerings o on o.old_id = dp.producto_id
   order by
     dp.id
+SQL
+# form fields
+ApplicationRecord.connection.execute(<<~SQL)
+  insert into form_fields (
+    form_id,
+    dynamic_property_id,
+    static_property,
+    sort_index,
+    created_at,
+    updated_at,
+    old_table,
+    old_id
+  )
+  select
+    f.id,
+    dp.id,
+    cf.atributo_estatico,
+    cf.orden,
+    cf.created_at,
+    cf.updated_at,
+    'campos_formulario',
+    cf.id
+  from
+    tmp_campos_formulario cf
+    left join dynamic_properties dp on dp.old_id = cf.atributo_dinamico_id
+    left join forms f on f.old_id = cf.formulario_id
+  order by
+    cf.id
 SQL

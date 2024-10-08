@@ -105,6 +105,19 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_30_120118) do
     t.index ["website_id"], name: "index_folders_on_website_id"
   end
 
+  create_table "form_fields", force: :cascade do |t|
+    t.bigint "form_id"
+    t.bigint "dynamic_property_id"
+    t.string "static_property"
+    t.integer "sort_index"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "old_table"
+    t.integer "old_id"
+    t.index ["dynamic_property_id"], name: "index_form_fields_on_dynamic_property_id"
+    t.index ["form_id"], name: "index_form_fields_on_form_id"
+  end
+
   create_table "forms", force: :cascade do |t|
     t.bigint "folder_id"
     t.bigint "offering_id"
@@ -648,8 +661,12 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_30_120118) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "areas", "areas"
   add_foreign_key "assets", "folders"
+  add_foreign_key "dynamic_properties", "merchants"
+  add_foreign_key "dynamic_properties", "offerings"
   add_foreign_key "folders", "folders"
   add_foreign_key "folders", "websites"
+  add_foreign_key "form_fields", "dynamic_properties"
+  add_foreign_key "form_fields", "forms"
   add_foreign_key "forms", "folders"
   add_foreign_key "forms", "offerings"
   add_foreign_key "forms", "webpages", column: "redirect_to_id"
