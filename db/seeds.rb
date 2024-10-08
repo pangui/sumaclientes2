@@ -585,3 +585,28 @@ ApplicationRecord.connection.execute(<<~SQL)
   order by
     cf.id
 SQL
+# dynamic property options
+ApplicationRecord.connection.execute(<<~SQL)
+  insert into dynamic_property_options (
+    property_id,
+    value,
+    sort_index,
+    created_at,
+    updated_at,
+    old_table,
+    old_id
+  )
+  select
+    dp.id,
+    o.valor,
+    o.orden,
+    o.created_at,
+    o.updated_at,
+    'opciones_atributo_dinamico',
+    o.id
+  from
+    tmp_opciones_atributo_dinamico o
+    left join dynamic_properties dp on dp.old_id = o.atributo_id
+  order by
+    o.id
+SQL

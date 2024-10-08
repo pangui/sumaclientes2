@@ -92,6 +92,17 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_30_120118) do
     t.index ["offering_id"], name: "index_dynamic_properties_on_offering_id"
   end
 
+  create_table "dynamic_property_options", force: :cascade do |t|
+    t.bigint "property_id"
+    t.string "value"
+    t.integer "sort_index"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "old_table"
+    t.integer "old_id"
+    t.index ["property_id"], name: "index_dynamic_property_options_on_property_id"
+  end
+
   create_table "folders", force: :cascade do |t|
     t.bigint "website_id"
     t.bigint "folder_id"
@@ -663,6 +674,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_30_120118) do
   add_foreign_key "assets", "folders"
   add_foreign_key "dynamic_properties", "merchants"
   add_foreign_key "dynamic_properties", "offerings"
+  add_foreign_key "dynamic_property_options", "dynamic_properties", column: "property_id"
   add_foreign_key "folders", "folders"
   add_foreign_key "folders", "websites"
   add_foreign_key "form_fields", "dynamic_properties"
