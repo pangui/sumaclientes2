@@ -225,6 +225,19 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_30_120118) do
     t.index ["user_id"], name: "index_permissions_on_user_id"
   end
 
+  create_table "selected_properties", force: :cascade do |t|
+    t.bigint "dynamic_property_id"
+    t.bigint "offering_id"
+    t.string "static_property"
+    t.integer "sort_index"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "old_table"
+    t.integer "old_id"
+    t.index ["dynamic_property_id"], name: "index_selected_properties_on_dynamic_property_id"
+    t.index ["offering_id"], name: "index_selected_properties_on_offering_id"
+  end
+
   create_table "tmp_adjuntos_web", id: :integer, default: -> { "nextval('adjuntos_web_id_seq'::regclass)" }, force: :cascade do |t|
     t.integer "carpeta_id"
     t.datetime "created_at", precision: nil
@@ -706,6 +719,8 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_30_120118) do
   add_foreign_key "offerings", "merchants"
   add_foreign_key "offerings", "websites"
   add_foreign_key "permissions", "users"
+  add_foreign_key "selected_properties", "dynamic_properties"
+  add_foreign_key "selected_properties", "offerings"
   add_foreign_key "users", "merchants"
   add_foreign_key "webpages", "folders"
   add_foreign_key "websites", "merchants"

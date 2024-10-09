@@ -4,6 +4,12 @@ class DynamicProperty < ApplicationRecord
   # associations
   belongs_to :merchant
   belongs_to :offering
+  has_many \
+    :options,
+    class_name: 'DynamicPropertyOption',
+    dependent: :restrict_with_exception,
+    foreign_key: :property_id,
+    inverse_of: :property
   # constants
   INPUT_TYPES = {
     text: 'Campo de texto (una línea)',
@@ -19,12 +25,12 @@ class DynamicProperty < ApplicationRecord
   }.freeze
   # scopes
   default_scope ->{ order(:sort_index) }
-  TIPOS_FILTROS = {
-    'texto' => { type: 'string' },
+  FILTER_TYPES = {
+    'text' => { type: 'string' },
     'textarea' => { type: 'string' },
-    'lista' => { type: 'list' },
-    'fecha' => { type: 'date' },
-    'comuna' => { type: 'commune' }
+    'select' => { type: 'list' },
+    'date' => { type: 'date' },
+    'commune' => { type: 'commune' }
   }.freeze
 
   # # callbacks
@@ -90,13 +96,13 @@ class DynamicProperty < ApplicationRecord
   #   end
   # end
 
-  # def tipo_para_filtro
-  #   tipo_filtro = TIPOS_FILTROS[tipo]
-  #   tipo_filtro[:label] = titulo
-  #   tipo_filtro[:name] = id.to_s
-  #   tipo_filtro[:options] = opciones.map(&:valor) if tipo_filtro[:type] == 'list'
-  #   tipo_filtro[:options] = Comuna.order(:nombre).pluck(:id, :nombre) if tipo == 'comuna'
-  #   tipo_filtro
-  # end
+  def type_for_filter
+    filter_type = FILTER_TYPES[input_type]
+    filter_type[:label] = title
+    filter_type[:name] = id.to_s
+    filter_type[:options] = options.map(&:value) if filter_type[:type] == 'list'
+    filter_type[:options] = Area.chilean_communes.order(:name).pluck(:id, :name) if input_type == 'commune'
+    filter_type
+  end
 
 end

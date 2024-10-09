@@ -645,3 +645,31 @@ ApplicationRecord.connection.execute(<<~SQL)
   order by
     dr.id
 SQL
+# selected properties
+ApplicationRecord.connection.execute(<<~SQL)
+  insert into selected_properties (
+    dynamic_property_id,
+    offering_id,
+    static_property,
+    sort_index,
+    created_at,
+    updated_at,
+    old_table,
+    old_id
+  )
+  select
+    dp.id,
+    o.id,
+    ad.atributo_estatico,
+    ad.orden,
+    ad.created_at,
+    ad.updated_at,
+    'atributos_destacados',
+    ad.id
+  from
+    tmp_atributos_destacados ad
+    left join dynamic_properties dp on dp.old_id = ad.atributo_id
+    left join offerings o on o.old_id = ad.producto_id
+  order by
+    ad.id
+SQL

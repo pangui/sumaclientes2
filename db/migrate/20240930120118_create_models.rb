@@ -186,6 +186,12 @@ class CreateModels < ActiveRecord::Migration[7.1]
       t.string :distribution_value
       t.string :static_property
     end
+    recreate_table :selected_properties do |t|
+      t.references :dynamic_property, foreign_key: true
+      t.references :offering, foreign_key: true
+      t.string :static_property
+      t.integer :sort_index
+    end
   end
 
   def recreate_table(name)
