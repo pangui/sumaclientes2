@@ -610,3 +610,38 @@ ApplicationRecord.connection.execute(<<~SQL)
   order by
     o.id
 SQL
+# distribution rules
+ApplicationRecord.connection.execute(<<~SQL)
+  insert into distribution_rules (
+    dynamic_property_id,
+    offering_id,
+    receiver_id,
+    priority,
+    comparison_operator,
+    distribution_value,
+    static_property,
+    created_at,
+    updated_at,
+    old_table,
+    old_id
+  )
+  select
+    dp.id,
+    o.id,
+    u.id,
+    dr.priority,
+    dr.comparison_operator,
+    dr.distribution_value,
+    dr.static_attribute,
+    dr.created_at,
+    dr.updated_at,
+    'distribution_rules',
+    dr.id
+  from
+    tmp_distribution_rules dr
+    left join users u on u.old_id = dr.receiver_id
+    left join dynamic_properties dp on dp.old_id = dr.dynamic_attribute_id
+    left join offerings o on o.old_id = dr.product_id
+  order by
+    dr.id
+SQL

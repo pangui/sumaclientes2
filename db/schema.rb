@@ -74,6 +74,23 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_30_120118) do
     t.index ["folder_id"], name: "index_assets_on_folder_id"
   end
 
+  create_table "distribution_rules", force: :cascade do |t|
+    t.bigint "dynamic_property_id"
+    t.bigint "offering_id"
+    t.bigint "receiver_id"
+    t.integer "priority"
+    t.string "comparison_operator"
+    t.string "distribution_value"
+    t.string "static_property"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "old_table"
+    t.integer "old_id"
+    t.index ["dynamic_property_id"], name: "index_distribution_rules_on_dynamic_property_id"
+    t.index ["offering_id"], name: "index_distribution_rules_on_offering_id"
+    t.index ["receiver_id"], name: "index_distribution_rules_on_receiver_id"
+  end
+
   create_table "dynamic_properties", force: :cascade do |t|
     t.bigint "merchant_id"
     t.bigint "offering_id"
@@ -357,7 +374,6 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_30_120118) do
     t.integer "receiver_id"
     t.index ["dynamic_attribute_id"], name: "index_distribution_rules_on_dynamic_attribute_id"
     t.index ["product_id"], name: "index_distribution_rules_on_product_id"
-    t.index ["receiver_id"], name: "index_distribution_rules_on_receiver_id"
   end
 
   create_table "tmp_estados_prospecto", id: :integer, default: -> { "nextval('estados_prospecto_id_seq'::regclass)" }, force: :cascade do |t|
@@ -672,6 +688,9 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_30_120118) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "areas", "areas"
   add_foreign_key "assets", "folders"
+  add_foreign_key "distribution_rules", "dynamic_properties"
+  add_foreign_key "distribution_rules", "offerings"
+  add_foreign_key "distribution_rules", "users", column: "receiver_id"
   add_foreign_key "dynamic_properties", "merchants"
   add_foreign_key "dynamic_properties", "offerings"
   add_foreign_key "dynamic_property_options", "dynamic_properties", column: "property_id"

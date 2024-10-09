@@ -176,6 +176,16 @@ class CreateModels < ActiveRecord::Migration[7.1]
       t.string :value
       t.integer :sort_index
     end
+    remove_index :tmp_distribution_rules, name: :index_distribution_rules_on_receiver_id, if_exists: true
+    recreate_table :distribution_rules do |t|
+      t.references :dynamic_property, foreign_key: true
+      t.references :offering, foreign_key: true
+      t.references :receiver, foreign_key: { to_table: :users }
+      t.integer :priority
+      t.string :comparison_operator
+      t.string :distribution_value
+      t.string :static_property
+    end
   end
 
   def recreate_table(name)
