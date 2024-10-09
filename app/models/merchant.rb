@@ -2,14 +2,13 @@
 class Merchant < ApplicationRecord
 
   # associations
+  has_many :customers, dependent: :restrict_with_exception
   has_many :dynamic_properties, dependent: :restrict_with_exception
   has_many :offerings, ->{ where(active: true) }, dependent: :restrict_with_exception, inverse_of: :merchant
   has_many :users, dependent: :restrict_with_exception
   has_many :websites, dependent: :restrict_with_exception
   # has_many :all_products, class_name: 'Producto'
-  # has_many :clientes
-  # has_many :prospectos
-  # has_many :atributos_dinamicos, class_name: 'AtributoDinamico'
+  # has_many :leads
   # callbacks
   after_create :create_website
   # nested attributes

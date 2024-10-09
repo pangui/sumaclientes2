@@ -192,6 +192,26 @@ class CreateModels < ActiveRecord::Migration[7.1]
       t.string :static_property
       t.integer :sort_index
     end
+    recreate_table :customers do |t|
+      t.references :merchant, foreign_key: true
+      t.string :first_name
+      t.string :father_family_name
+      t.string :mother_family_name
+      t.string :email
+      t.string :sex
+      t.date :birthdate
+      t.string :mobile_phone
+      t.string :home_phone
+      t.string :work_phone
+      t.string :home_address
+      t.string :work_address
+      t.string :channel
+      t.string :utm_campaign
+      t.string :utm_content
+      t.string :utm_medium
+      t.string :utm_source
+      t.string :utm_term
+    end
   end
 
   def recreate_table(name)

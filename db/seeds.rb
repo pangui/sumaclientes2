@@ -673,3 +673,58 @@ ApplicationRecord.connection.execute(<<~SQL)
   order by
     ad.id
 SQL
+# customers
+ApplicationRecord.connection.execute(<<~SQL)
+  insert into customers (
+    merchant_id,
+    first_name,
+    father_family_name,
+    mother_family_name,
+    email,
+    sex,
+    birthdate,
+    mobile_phone,
+    home_phone,
+    work_phone,
+    home_address,
+    work_address,
+    channel,
+    utm_campaign,
+    utm_content,
+    utm_medium,
+    utm_source,
+    utm_term,
+    created_at,
+    updated_at,
+    old_table,
+    old_id
+  )
+  select
+    m.id,
+    c.nombres,
+    c.apellido_paterno,
+    c.apellido_materno,
+    c.correo_electronico,
+    c.sexo,
+    c.fecha_de_nacimiento,
+    c.telefono_movil,
+    c.telefono_particular,
+    c.telefono_comercial,
+    c.direccion_particular,
+    c.direccion_comercial,
+    c.canal,
+    c.utm_campaign,
+    c.utm_content,
+    c.utm_medium,
+    c.utm_source,
+    c.utm_term,
+    c.created_at,
+    c.updated_at,
+    'clientes',
+    c.id
+  from
+    tmp_clientes c
+    left join merchants m on m.old_id = c.comercio_id
+  order by
+    c.id
+SQL

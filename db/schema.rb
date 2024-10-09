@@ -74,6 +74,32 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_30_120118) do
     t.index ["folder_id"], name: "index_assets_on_folder_id"
   end
 
+  create_table "customers", force: :cascade do |t|
+    t.bigint "merchant_id"
+    t.string "first_name"
+    t.string "father_family_name"
+    t.string "mother_family_name"
+    t.string "email"
+    t.string "sex"
+    t.date "birthdate"
+    t.string "mobile_phone"
+    t.string "home_phone"
+    t.string "work_phone"
+    t.string "home_address"
+    t.string "work_address"
+    t.string "channel"
+    t.string "utm_campaign"
+    t.string "utm_content"
+    t.string "utm_medium"
+    t.string "utm_source"
+    t.string "utm_term"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "old_table"
+    t.integer "old_id"
+    t.index ["merchant_id"], name: "index_customers_on_merchant_id"
+  end
+
   create_table "distribution_rules", force: :cascade do |t|
     t.bigint "dynamic_property_id"
     t.bigint "offering_id"
@@ -701,6 +727,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_09_30_120118) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "areas", "areas"
   add_foreign_key "assets", "folders"
+  add_foreign_key "customers", "merchants"
   add_foreign_key "distribution_rules", "dynamic_properties"
   add_foreign_key "distribution_rules", "offerings"
   add_foreign_key "distribution_rules", "users", column: "receiver_id"
